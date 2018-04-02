@@ -15,5 +15,6 @@ setup(
 	package_data={
 		'voikko': ['sanat.txt', 'subst.aff', 'verb.aff'],
 	},
+	python_requires='>=3',
 	install_requires=[],
 )
