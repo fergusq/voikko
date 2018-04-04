@@ -72,7 +72,7 @@ def inflect_word(word, classes=None):
 					if word[-i-1] != word2[-i-1]:
 						break
 					i += 1
-				return i
+				return (i, -len(word2))
 			mirror = sorted(list(WORD_CLASSES), key=end_similarity)[-1]
 			classes = WORD_CLASSES[mirror]
 			WORD_CLASSES[word] = classes
