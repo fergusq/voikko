@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
 	name='voikko',
-	version='0.3',
+	version='0.4',
 	description='Python 3 version of libvoikko and the word inflecting library',
 	long_description=long_description,
 	long_description_content_type='text/markdown',

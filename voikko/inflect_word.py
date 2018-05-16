@@ -53,7 +53,7 @@ def word_and_infl_class(fullclass):
 		sys.exit(1)
 	return (wordclass, infclass)
 
-def inflect_word(word, classes=None):
+def inflect_word(word, classes=None, required_wclass=None):
 	global verb_types
 	global noun_types
 	if classes is None:
@@ -73,7 +73,14 @@ def inflect_word(word, classes=None):
 						break
 					i += 1
 				return (i, -len(word2))
-			mirror = sorted(list(WORD_CLASSES), key=end_similarity)[-1]
+			def right_wclass(word2):
+				if required_wclass is None or WORD_CLASSES[word2].startswith(required_wclass):
+					return 1
+				else:
+					return 0
+			def points(word2):
+				return (right_wclass(word2), end_similarity(word2))
+			mirror = sorted(list(WORD_CLASSES), key=points)[-1]
 			classes = WORD_CLASSES[mirror]
 			WORD_CLASSES[word] = classes
 			#raise(Exception("Unknown word '" + word + "'"))
