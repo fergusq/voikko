@@ -711,6 +711,24 @@ imperfekti_pass	0	ttiin	w
 end: rules
 end: class
 
+# Kotus 71 nähdä
+class: 71
+sm-class: nähdä
+rmsfx: hdA
+match-word: hdA
+consonant-gradation: -
+group: t
+transform-group: e
+rules:
+infinitiivi_1	0	hda	w
+preesens_yks_1	0	en	s
+imperfekti_yks_3	0	ki	s
+kondit_yks_3	0	kisi	s
+imperatiivi_yks_3	0	hkoon	w
+partisiippi_2	0	hnut	w
+imperfekti_pass	0	htiin	w
+end: rules
+end: class
 
 # Kotus 72 vanheta
 class: 72

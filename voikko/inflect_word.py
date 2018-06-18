@@ -1,5 +1,11 @@
-# Copyright 2017 Iikka Hauhio
+# Copyright 2018 Kielikone Oy
+#
+# Added generate_forms that can generate alternative forms
+# Guessing -ton/-tön inflection class
+# Fixed bugs
 
+# Copyright 2017 Iikka Hauhio
+#
 # Contains some changes to the original file (voikko-inflect-word).
 # The file is no longer a stand-alone program, but a library.
 # It reads word classes automatically from the sanat.txt file.
@@ -7,7 +13,7 @@
 # The file was changed to support Python 3.
 
 # Copyright 2005-2007 Harri Pitkänen (hatapitk@iki.fi)
-
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -53,18 +59,22 @@ def word_and_infl_class(fullclass):
 		sys.exit(1)
 	return (wordclass, infclass)
 
-def inflect_word(word, classes=None, required_wclass=None):
+def generate_forms(word, infl_classes=None, pos=None):
+	"""Generates inflected forms for the given word."""
+
 	global verb_types
 	global noun_types
-	if classes is None:
+	if infl_classes is None:
 		if word in WORD_CLASSES:
-			classes = WORD_CLASSES[word]
+			infl_classes = WORD_CLASSES[word]
 		elif len(word) > 3 and word[-3:] in ["ttu", "tty"]:
-			classes = "subst-valo-av1"
+			infl_classes = ["subst-valo-av1"]
 		elif len(word) > 3 and word[-3:] in ["uus", "yys"]:
-			classes = "subst-kalleus"
+			infl_classes = ["subst-kalleus"]
 		elif len(word) > 3 and word[-2:] in ["ja", "jä"]:
-			classes = "subst-kulkija"
+			infl_classes = ["subst-kulkija"]
+		elif len(word) > 4 and word[-3:] in ["ton", "tön"]:
+			infl_classes = ["subst-onneton-av2"]
 		else:
 			def end_similarity(word2):
 				i = 0
@@ -74,23 +84,41 @@ def inflect_word(word, classes=None, required_wclass=None):
 					i += 1
 				return (i, -len(word2))
 			def right_wclass(word2):
-				if required_wclass is None or WORD_CLASSES[word2].startswith(required_wclass):
+				if pos is None or any([word_class.startswith(pos) for word_class in WORD_CLASSES[word2]]):
 					return 1
 				else:
 					return 0
 			def points(word2):
 				return (right_wclass(word2), end_similarity(word2))
 			mirror = sorted(list(WORD_CLASSES), key=points)[-1]
-			classes = WORD_CLASSES[mirror]
-			WORD_CLASSES[word] = classes
+			infl_classes = WORD_CLASSES[mirror]
+			WORD_CLASSES[word] = infl_classes
 			#raise(Exception("Unknown word '" + word + "'"))
-	(wclass, infclass) = word_and_infl_class(classes)
-	if wclass == u'verbi': itypes = verb_types
-	else: itypes = noun_types
-	ans = {}
-	for iword in voikkoinfl.inflectWord(word, infclass, itypes):
-		ans[iword.formName] = iword.inflectedWord
+	ans = []
+	for infl_class in infl_classes:
+		(wclass, infclass) = word_and_infl_class(infl_class)
+		if wclass == u'verbi': itypes = verb_types
+		else: itypes = noun_types
+		homonym = {}
+		for iword in voikkoinfl.inflectWord(word, infclass, itypes):
+			if iword.formName not in homonym:
+				homonym[iword.formName] = []
+			if iword.inflectedWord not in homonym[iword.formName]:
+				homonym[iword.formName].append(iword.inflectedWord)
+		ans.append(homonym)
 	return ans
+
+def inflect_word(word, classes=None, required_wclass=None):
+	"""Deprecated."""
+
+	homonyms = generate_forms(word, infl_classes=classes, pos=required_wclass)
+	ans = []
+	for homonym in homonyms:
+		new_homonym = {}
+		for form in homonym:
+			new_homonym[form] = homonym[form][0]
+		ans.append(new_homonym)
+	return ans[0]
 
 WORD_CLASSES = {}
 
@@ -100,4 +128,8 @@ with open(os.path.join(SCRIPT_DIR, 'sanat.txt')) as f:
 		i = line.index(";")
 		word = line[:i].replace("=", "")
 		classes = line[i+1:]
-		WORD_CLASSES[word] = classes
+		
+		if word not in WORD_CLASSES:
+			WORD_CLASSES[word] = []
+		
+		WORD_CLASSES[word].append(classes)
